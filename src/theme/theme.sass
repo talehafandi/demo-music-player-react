@@ -1,0 +1,31 @@
+button
+    cursor: pointer
+    background-color: transparent
+    border: none
+    display: flex
+    padding: 0
+*
+  // background: rgb(0 100 0 / .05) 
+  font-family: 'Nunito' !important
+  box-sizing: border-box
+  padding: 0
+  margin: 0
+
+@font-face 
+  font-family: 'Nunito'
+  src: url('../fonts/static/Nunito-Regular.ttf') 
+
+@keyframes spin
+  from 
+    transform: rotate(0deg)
+  to 
+    transform: rotate(360deg)
+
+.animate-spin-slow
+  animation: spin 10s linear infinite
+
+.volume-bar-active
+  display: block !important
+.library--active
+  left: 0 !important
+  transition: all .3s ease-in-out
