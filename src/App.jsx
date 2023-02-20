@@ -27,7 +27,8 @@ function App() {
   return (
     <div className="App">
       <header>
-        <img src={reactLogo} className="App-logo" alt="logo" />
+        {/* <img src={reactLogo} className="App-logo" alt="logo" /> */}
+        <h1>Player</h1>
         <button className='btn-library' onClick={libraryToggle} >
           Libary
         </button>

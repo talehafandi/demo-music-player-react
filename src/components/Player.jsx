@@ -37,21 +37,38 @@ const Player = (props) => {
     const progressRef = useRef(null);
 
     const [volume, setVolume] = useState(50)
-    const [songState, setSongState] = useState(false); // false means song is not playing currently
     const [currentTime, setCurrentTime] = useState(0); 
     const [progress, setProgress] = useState(0);
-    
-    useEffect(() => {
-        // console.log("currentIndex", currentIndex);
-        // progressRef.current.style.setProperty('transform', `translateX(${progress}%)`);
+    const [isDragging, setIsDragging] = useState(false);
 
-    }, [currentIndex])
+    const onProgressChange = (time) => {
+        audioRef.current.currentTime = time;
+    }
 
-    const onProgressChange = (e) => {
-        // const { duration, currentTime } = audioRef.current;
-        // const progressPercent = (currentTime / duration) * 100;
-        setProgress(e.target.value);
-        console.log("test")
+    const handleMouseUp = (e) => {
+        setIsDragging(false);
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const progress = x / rect.width * 100;
+        setProgress(progress);
+        onProgressChange(progress / 100 * audioRef.current.duration);
+        // console.log("up: ", progress)
+    }
+
+    const handleMouseDown = () => {
+        setIsDragging(true);
+        // console.log("down: ", isDragging)
+    }
+
+    const handleMouseMove = (e) => {
+        if (isDragging) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const progress = x / rect.width * 100;
+            setProgress(progress);
+            onProgressChange(progress / 100 * audioRef.current.duration);
+          }
+        // console.log("move: ", isDragging)
     }
 
     const trackToggle = () => {
@@ -59,17 +76,14 @@ const Player = (props) => {
         let imgClassList = imgRef.current.classList;
         if (isPlaying){
             imgClassList.remove('animate-spin-slow');
-            // console.log(window.getComputedStyle(imgRef.current, null).getPropertyValue('transform'))
             audioRef.current.pause();
-            // setIsPlaying(false);
         }else {
             imgClassList.add('animate-spin-slow');
             audioRef.current.play();
-            // setIsPlaying(true);
         }
     }
 
-    const onSongChange = (direction) => {
+    const handleSongChange = (direction) => {
         if (direction === 'next' && currentIndex < songs.length - 1){
             setCurrentSong(songs[currentIndex + 1]);
             setCurrentIndex(prevState => prevState + 1);
@@ -77,21 +91,20 @@ const Player = (props) => {
             setCurrentSong(songs[currentIndex - 1]);
             setCurrentIndex(prevState => prevState - 1);
         }
+        setProgress(0)
     }
 
     const volumeBarToggle = () => {
         volumeRef.current.classList.toggle('volume-bar-active');
     }
 
-    const onVolumeChange = (e) => {
+    const handleVolumeChange = (e) => {
         setVolume(e.target.value);
         audioRef.current.volume = volume / 100;
-        console.log("volume", durationParser(audioRef.current.currentTime), audioRef.current.duration)
     }
 
-    const onReplay = () => {
+    const handleReplay = () => {
         audioRef.current.currentTime = 0;
-        // audioRef.current.play();
     }
 
     useEffect(() => {
@@ -99,25 +112,20 @@ const Player = (props) => {
     }, [currentSong])
 
     useEffect(() => {
-        if(isPlaying){
+        if(isPlaying && !isDragging){
             setInterval(() => {
                 const { duration, currentTime } = audioRef.current;
                 const progressPercent = (currentTime / duration) * 100;
                 setProgress(progressPercent);
-                // console.log("hrmmm")
             }, 1000);
         }
-        // console.log("hrmmm")
-    }, [isPlaying])
+    }, [isPlaying, isDragging])
 
-    const onTimeUpdate = () => {
+    const handleTimeUpdate = () => {
         const { duration, currentTime } = audioRef.current;
         setCurrentTime(currentTime);
-        // const progressPercent = (currentTime / duration) * 100;
-        // setProgress(progressPercent);
-        // console.log("hrmmm")
     }
-
+    
   return (
     <div className='player'> 
         <div className="player-container">
@@ -125,15 +133,23 @@ const Player = (props) => {
                 <img src={currentSong.cover} ref={imgRef} alt={currentSong.name} />
             </div>
             <div className='song-info'>
-                <h3 className='track'>{currentSong.name}</h3>
-                <h4 className='artist'>{currentSong.artist}</h4>
-                <audio src={currentSong.audio} ref={audioRef} onTimeUpdate={onTimeUpdate} controls></audio>
+                <h3 className='track'>{currentSong?.name}</h3>
+                <h4 className='artist'>{currentSong?.artist}</h4>
+                <audio src={currentSong?.audio} ref={audioRef} onTimeUpdate={handleTimeUpdate} controls></audio>
             </div>
             <div className="song-progress">
                 <span className="progress-time">{durationParser(currentTime)}</span>
-                <div className="progress" >
-                    <input type="range" value={progress} onChange={onProgressChange} className='progress-bar-input' min='0' max='100' />
-                    <div className="progress-bar" ref={progressRef}></div>
+                <div className="progress" 
+                     onMouseUp={handleMouseUp}
+                     onMouseDown={handleMouseDown}
+                     onMouseMove={handleMouseMove} >
+                    <div className="progress-bar" 
+                        ref={progressRef} 
+                        style={{
+                            width: progress+'%', 
+                            background: `linear-gradient(${currentSong.colors[0]}, ${currentSong.colors[1]})`,
+                        }}>
+                    </div>
                 </div>
                 <span className="progress-time">{
                     audioRef.current?.duration 
@@ -144,22 +160,22 @@ const Player = (props) => {
             <div className='player-controls'>
                 <div className='control-buttons'>
                     <button className='btn-replay'>
-                        <img src={replayIcon} alt="replay" onClick={onReplay} />
+                        <img src={replayIcon} alt="replay" onClick={handleReplay} />
                     </button>
                     <button className='btn-prev'>
-                        <img src={prevIcon} alt="prev" onClick={() => onSongChange(directions.prev)} />
+                        <img src={prevIcon} alt="prev" onClick={() => handleSongChange(directions.prev)} />
                     </button>
                     <button className='btn-play'>
                         <img src={!isPlaying ? playIcon : pauseIcon} onClick={trackToggle} alt="play" />
                     </button>
                     <button className='btn-next'>
-                        <img src={nextIcon} alt="next" onClick={() => onSongChange(directions.next)} />
+                        <img src={nextIcon} alt="next" onClick={() => handleSongChange(directions.next)} />
                     </button>
                     <div className="track-volume">
                     <button className='btn-volume'>
                         <img src={volIcon} alt="next" onClick={volumeBarToggle} />
                     </button>
-                    <input type="range" min='0' max='100' ref={volumeRef} onChange={onVolumeChange} />
+                    <input type="range" min='0' max='100' ref={volumeRef} onChange={handleVolumeChange} />
                 </div>
                 </div>
             </div>
