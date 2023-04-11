@@ -1,6 +1,6 @@
 # Demo Music Player App
 
-## Demo Link: https://music-player-hazel-mu.vercel.app/
+## [Demo Link](https://music-player-hazel-mu.vercel.app/)
 
 ![Screenshot (316)](https://user-images.githubusercontent.com/90049038/231187692-08ea409b-10c5-4f76-9458-a66a4f8d5f20.png)
 
